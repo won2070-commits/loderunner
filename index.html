@@ -36,7 +36,7 @@
      iOS 홈바·브라우저 제스처 영역과 겹치지 않게 한다 */
   #pad{position:fixed;left:0;right:0;bottom:0;z-index:5;display:none;
        justify-content:space-between;align-items:flex-end;pointer-events:none;touch-action:none;
-       padding:0 max(6px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom,0px) + 14px) max(6px,env(safe-area-inset-right))}
+       padding:0 max(6px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom,0px) + 18px) max(6px,env(safe-area-inset-right))}
   #pad .cluster{display:grid;gap:0;pointer-events:auto}
   #pad .nav{grid-template-columns:repeat(3,clamp(58px,19vw,76px))}
   #pad .dg{grid-template-columns:repeat(2,clamp(68px,22vw,98px))}
@@ -68,8 +68,10 @@
     #hud{padding:3px 0;font-size:12px;gap:12px}
     #wrap{max-width:none;display:flex;justify-content:center;align-items:center;height:calc(100dvh - 28px)}
     canvas{width:min(100vw - 280px, (100dvh - 40px)*1.75);height:auto;border:0;border-radius:4px}
-    #pad{top:28px;bottom:0;align-items:center;
-         padding:0 max(4px,env(safe-area-inset-right)) 0 max(4px,env(safe-area-inset-left))}
+    /* 다이아몬드를 세로 중앙이 아니라 아래쪽(엄지가 쉬는 높이)에 둔다 */
+    #pad{top:28px;bottom:0;align-items:flex-end;
+         padding:0 max(4px,env(safe-area-inset-right))
+                 calc(env(safe-area-inset-bottom,0px) + 24px) max(4px,env(safe-area-inset-left))}
     #pad button{height:56px;background:rgba(21,27,44,.6);background-clip:padding-box}
     #pad .nav{grid-template-columns:repeat(3,46px)}
     #pad .dg{grid-template-columns:repeat(2,62px)}
@@ -108,7 +110,7 @@
 </p>
 
 <script>
-const APP_VER = "2026-08-13.10";     // 배포할 때마다 올린다 — 자동 새로고침의 기준값
+const APP_VER = "2026-08-13.11";     // 배포할 때마다 올린다 — 자동 새로고침의 기준값
 const W = 28, H = 16, TS = 24;
 const SPD = 0.115, FALL = 0.22, ESPD = 0.058, GRACE = 120; // 적은 느리게, 시작 2초 유예
 const REGEN = 280, TRAP = 150, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 2.5초 뒤 기어나옴
@@ -490,6 +492,12 @@ function padHit(x,y){
   const btn = el && el.closest ? el.closest("#pad button") : null;
   return btn ? {k:btn.dataset.k, btn} : null;
 }
+// 좌표가 버튼을 살짝 벗어나도(굵은 손가락 접촉 중심이 아래로 새는 경우가 흔하다)
+// 브라우저가 지목한 target 으로 받아준다 — ▼ 처럼 가장자리 버튼의 생명줄
+function targetHit(ev){
+  const btn = ev.target && ev.target.closest ? ev.target.closest("#pad button") : null;
+  return btn ? {k:btn.dataset.k, btn} : null;
+}
 function fingerUp(id){
   const f = fingers.get(id); if(!f) return;
   f.btn.classList.remove("on");
@@ -509,7 +517,7 @@ function fingerAt(id, hit){
 pad.addEventListener("pointerdown", ev=>{
   ev.preventDefault();
   downIds.add(ev.pointerId);
-  const hit = padHit(ev.clientX, ev.clientY);
+  const hit = padHit(ev.clientX, ev.clientY) || targetHit(ev);
   if(hit) fingerAt(ev.pointerId, hit);
 });
 pad.addEventListener("pointermove", ev=>{

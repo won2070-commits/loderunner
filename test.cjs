@@ -104,9 +104,11 @@ eval(src + "\n" + checks);
     ["미끄러지면 키 전환(pointermove)", /pad\.addEventListener\("pointermove"/],
     ["손가락별 추적", /fingers = new Map\(\)/],
     ["히트영역 확장(투명 테두리 5px)", /border:5px solid transparent/],
-    ["하단 들어올림(safe-area + 14px)", /env\(safe-area-inset-bottom,0px\) \+ 14px/],
+    ["빗나간 터치는 target 폴백으로 흡수", /padHit\(ev\.clientX, ev\.clientY\) \|\| targetHit\(ev\)/],
+    ["하단 들어올림(safe-area + 18px)", /env\(safe-area-inset-bottom,0px\) \+ 18px/],
     ["가로모드: 게임판 폭 예약(버튼과 분리)", /100vw - 280px/],
-    ["가로모드: 버튼 세로 중앙", /top:28px;bottom:0;align-items:center/],
+    ["가로모드: 버튼 하단 배치(엄지 높이)", /top:28px;bottom:0;align-items:flex-end/],
+    ["가로모드: 하단 여유(safe-area + 24px)", /env\(safe-area-inset-bottom,0px\) \+ 24px/],
   ];
   for(const [n,re] of cases){ const ok=re.test(html); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
