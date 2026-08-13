@@ -23,14 +23,45 @@
        background:rgba(6,8,14,.82);border-radius:6px;text-align:center;gap:10px;padding:16px}
   #msg h2{font-size:22px;letter-spacing:.2em;color:#ffd23f}
   #msg p{font-size:13px;color:#9aa7c4;line-height:1.7}
-  #pad{display:none;width:100%;max-width:520px;gap:8px;grid-template-columns:repeat(5,1fr);touch-action:none}
-  #pad button{background:#151b2c;border:1px solid #26314e;color:#cfd6e6;border-radius:10px;
-              padding:14px 0;font-size:16px;font-family:inherit;user-select:none}
-  #pad button:active{background:#27324f;color:#ffd23f}
-  #pad .dig{color:#ff8f5a}
   .help{font-size:12px;color:#5d6884;line-height:1.8;text-align:center;max-width:640px}
   .help b{color:#93a1c4;font-weight:600}
-  @media(pointer:coarse){#pad{display:grid} .help .kb{display:none}}
+
+  /* 조작 버튼: 화면 아래 양쪽 구석에 고정 — 세로·가로 모두 엄지 위치에 온다 */
+  #pad{position:fixed;left:0;right:0;bottom:0;z-index:5;display:none;
+       justify-content:space-between;align-items:flex-end;pointer-events:none;touch-action:none;
+       padding:0 max(10px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-right))}
+  #pad .cluster{display:grid;gap:7px;pointer-events:auto}
+  #pad .nav{grid-template-columns:repeat(3,clamp(46px,15vw,62px))}
+  #pad .dg{grid-template-columns:repeat(2,clamp(58px,19vw,88px))}
+  #pad button{background:rgba(21,27,44,.8);border:1px solid #2c3757;color:#cfd6e6;border-radius:12px;
+              height:54px;font-size:17px;font-family:inherit;user-select:none;touch-action:none;
+              -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+  #pad button:active{background:#31406a;color:#ffd23f}
+  #pad .dig{color:#ff8f5a;font-size:14px;font-weight:600}
+  #pad .u{grid-column:2} #pad .l{grid-column:1} #pad .d{grid-column:2} #pad .r{grid-column:3}
+
+  .rot{display:none}
+  @media(pointer:coarse){
+    #pad{display:flex}
+    .help .kb{display:none}
+    body{padding-bottom:150px}
+  }
+  @media(pointer:coarse) and (orientation:portrait){
+    .rot{display:block;color:#ffd23f;margin-bottom:6px}
+  }
+  /* 가로로 눕힌 폰(과 낮은 창): 화면을 꽉 채우고 버튼은 좌우 구석에 겹쳐 올린다 */
+  @media (orientation:landscape) and (max-height:560px){
+    body{padding:0;gap:0;justify-content:flex-start}
+    h1,.help{display:none}
+    #hud{padding:3px 0;font-size:12px;gap:12px}
+    #wrap{max-width:none;display:flex;justify-content:center}
+    canvas{width:auto;height:calc(100dvh - 30px);max-width:100vw;border:0;border-radius:0}
+    #pad{padding-bottom:max(8px,env(safe-area-inset-bottom))}
+    #pad .cluster{gap:5px}
+    #pad button{height:44px;background:rgba(21,27,44,.55)}
+    #pad .nav{grid-template-columns:repeat(3,52px)}
+    #pad .dg{grid-template-columns:repeat(2,62px)}
+  }
 </style>
 </head>
 <body>
@@ -46,14 +77,19 @@
   <div id="msg"><h2 id="mt"></h2><p id="mp"></p></div>
 </div>
 <div id="pad">
-  <button data-k="dl" class="dig">◤ 파기</button>
-  <button data-k="l">◀</button>
-  <button data-k="u">▲</button>
-  <button data-k="r">▶</button>
-  <button data-k="dr" class="dig">파기 ◥</button>
-  <button data-k="d" style="grid-column:3">▼</button>
+  <div class="cluster nav">
+    <button data-k="u" class="u">▲</button>
+    <button data-k="l" class="l">◀</button>
+    <button data-k="d" class="d">▼</button>
+    <button data-k="r" class="r">▶</button>
+  </div>
+  <div class="cluster dg">
+    <button data-k="dl" class="dig">◤ 파기</button>
+    <button data-k="dr" class="dig">파기 ◥</button>
+  </div>
 </div>
 <p class="help">
+  <span class="rot">📱 폰을 가로로 눕히면 화면 가득 크게 나옵니다</span>
   <span class="kb"><b>이동</b> 방향키 / WASD &nbsp;·&nbsp; <b>왼쪽 파기</b> Z &nbsp;·&nbsp; <b>오른쪽 파기</b> X &nbsp;·&nbsp; <b>재시작</b> R<br></span>
   금괴를 모두 줍고 나타나는 사다리를 타고 맨 위로 탈출. 벽돌을 파서 적을 가두거나 아래로 내려간다.
 </p>
@@ -286,7 +322,7 @@ function spawnEnemy(){
 function die(){
   if(state !== "play") return;
   lives--;
-  if(lives <= 0){ state = "over"; show("GAME OVER", `점수 ${score}<br>스페이스 / 화면 탭으로 다시 시작`); }
+  if(lives <= 0){ state = "over"; show("GAME OVER", `점수 ${score}<br><b>화면을 탭</b>하면 다시 시작 (PC는 스페이스)`); }
   else { state = "dead"; show("MISS", `남은 목숨 ${lives}`); setTimeout(()=>{ if(state==="dead"){ loadLevel(level); state="play"; hide(); } }, 900); }
   updHud();
 }
@@ -435,7 +471,12 @@ document.getElementById("pad").addEventListener("pointerdown", ev=>{
 const clearKeys = ()=>{ keys.left=keys.right=keys.up=keys.down=false; };
 document.getElementById("pad").addEventListener("pointerup", clearKeys);
 document.getElementById("pad").addEventListener("pointercancel", clearKeys);
-cv.addEventListener("pointerdown", ()=>{ if(state==="over") newGame(); });
+addEventListener("blur", clearKeys);
+
+// 폰엔 스페이스가 없다 — 게임 화면(과 게임오버 안내)을 탭하면 다시 시작
+const tapRestart = ev=>{ if(state==="over"){ ev.preventDefault(); newGame(); } };
+cv.addEventListener("pointerdown", tapRestart);
+document.getElementById("msg").addEventListener("pointerdown", tapRestart);
 
 function restartLevel(){ if(state==="play"||state==="over"){ loadLevel(level); state="play"; hide(); } }
 function newGame(){ lives=3; score=0; loadLevel(0); state="play"; hide(); updHud(); }

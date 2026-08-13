@@ -103,3 +103,22 @@ eval(src + "\n" + checks);
   console.log(ok ? "PASS: 터치패드 포인터캡처 예외 방어" : "FAIL: 터치패드 포인터캡처 예외 방어");
   if(!ok) process.exitCode = 1;
 })();
+
+// 모바일 UX 점검: 탭 재시작 · 가로모드 레이아웃 · 버튼 클러스터
+(function mobileCheck(){
+  const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const cases = [
+    ["게임오버 화면 탭 재시작", /getElementById\("msg"\)\.addEventListener\("pointerdown", tapRestart\)/],
+    ["캔버스 탭 재시작", /cv\.addEventListener\("pointerdown", tapRestart\)/],
+    ["가로모드: 화면 높이에 맞춤", /orientation:landscape\) and \(max-height:560px\)[\s\S]{0,400}height:calc\(100dvh/],
+    ["가로모드: 제목·안내 숨김", /orientation:landscape\)[\s\S]{0,200}h1,\.help\{display:none\}/],
+    ["방향키 클러스터 좌측", /#pad \.nav\{grid-template-columns/],
+    ["파기 버튼 우측", /#pad \.dg\{grid-template-columns/],
+    ["세로모드 가로전환 안내", /가로로 눕히면/],
+  ];
+  for(const [n,re] of cases){
+    const ok = re.test(h);
+    console.log((ok ? "PASS: " : "FAIL: ") + n);
+    if(!ok) process.exitCode = 1;
+  }
+})();
