@@ -122,3 +122,23 @@ eval(src + "\n" + checks);
     if(!ok) process.exitCode = 1;
   }
 })();
+
+// 자동 업데이트 점검
+(function updateCheck(){
+  const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const s = fs.readFileSync(path.join(__dirname, "sw.js"), "utf8");
+  const cases = [
+    ["APP_VER 선언", /const APP_VER = "[\d.\-]+"/],
+    ["버전 화면 표시", /\$\("vr"\)\.textContent/],
+    ["서버 버전 확인(no-store)", /fetch\(location\.pathname \+ "\?fresh=" \+ now, \{cache:"no-store"\}\)/],
+    ["새로고침 루프 방지", /sessionStorage\.setItem\("lr_reloaded"/],
+    ["복귀 시 확인", /visibilitychange[\s\S]{0,60}checkFresh/],
+    ["SW: HTML은 no-store로 받기", /new Request\(e\.request\.url, \{ cache: "no-store" \}\)/],
+  ];
+  let bad = 0;
+  for(const [n,re] of cases){ const ok = re.test(h) || re.test(s); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) bad=1; }
+  // 캐시 이름과 APP_VER 를 같이 올렸는지
+  const cache = s.match(/const C = "loderunner-(v\d+)"/);
+  console.log(cache ? "PASS: SW 캐시 버전 "+cache[1] : "FAIL: SW 캐시 이름");
+  if(bad) process.exitCode = 1;
+})();

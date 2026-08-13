@@ -17,6 +17,7 @@
   #hud{display:flex;gap:14px;font-size:13px;letter-spacing:.05em;flex-wrap:wrap;justify-content:center}
   #hud span{color:#6b7899}
   #hud i{font-style:normal;color:#e9eefb}
+  #hud .ver{color:#39445e;font-size:11px;align-self:center}
   #wrap{position:relative;width:100%;max-width:760px}
   canvas{width:100%;display:block;background:#0d1018;border:1px solid #1e2740;border-radius:6px}
   #msg{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
@@ -71,6 +72,7 @@
   <span>LEVEL <i id="lv">1</i></span>
   <span>GOLD <i id="gd">0</i></span>
   <span>LIVES <i id="li">3</i></span>
+  <span class="ver" id="vr"></span>
 </div>
 <div id="wrap">
   <canvas id="cv" width="672" height="384"></canvas>
@@ -95,6 +97,7 @@
 </p>
 
 <script>
+const APP_VER = "2026-08-13.5";      // 배포할 때마다 올린다 — 자동 새로고침의 기준값
 const W = 28, H = 16, TS = 24;
 const SPD = 0.115, FALL = 0.22, ESPD = 0.058, GRACE = 120; // 적은 느리게, 시작 2초 유예
 const REGEN = 280, TRAP = 150, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 2.5초 뒤 기어나옴
@@ -486,6 +489,7 @@ function updHud(){ $("sc").textContent=score; $("lv").textContent=level+1; $("gd
 function show(t,p){ $("mt").innerHTML=t; $("mp").innerHTML=p; $("msg").style.display="flex"; }
 function hide(){ $("msg").style.display="none"; }
 
+$("vr").textContent = "v" + APP_VER;
 loadLevel(0);
 requestAnimationFrame(loop);
 
@@ -535,6 +539,30 @@ function iconPNG(size){
   if(location.protocol.startsWith("http") && navigator.serviceWorker)
     navigator.serviceWorker.register("sw.js").catch(()=>{});
 })();
+
+// ---------- 자동 업데이트: 서버 버전이 다르면 한 번만 새로고침 ----------
+// 서비스워커·브라우저 캐시가 옛 파일을 붙잡고 있어도 이걸로 풀린다.
+let lastCheck = 0;
+async function checkFresh(){
+  if(!location.protocol.startsWith("http")) return;      // file:// 은 확인할 서버가 없다
+  const now = Date.now();
+  if(now - lastCheck < 30000) return;                     // 30초 스로틀
+  lastCheck = now;
+  if(state === "play" && score > 0) return;               // 게임 중엔 미룬다
+  try{
+    const txt = await (await fetch(location.pathname + "?fresh=" + now, {cache:"no-store"})).text();
+    const m = txt.match(/APP_VER\s*=\s*"([^"]+)"/);
+    if(!m || m[1] === APP_VER) return;
+    try{ if(sessionStorage.getItem("lr_reloaded") === m[1]) return;   // 새로고침 루프 방지
+         sessionStorage.setItem("lr_reloaded", m[1]); }catch(_){}
+    const regs = navigator.serviceWorker ? await navigator.serviceWorker.getRegistrations() : [];
+    await Promise.all(regs.map(r=>r.update().catch(()=>{})));
+    location.replace(location.pathname + "?u=" + now);
+  }catch(_){}
+}
+addEventListener("visibilitychange", ()=>{ if(!document.hidden) checkFresh(); });
+addEventListener("pageshow", checkFresh);
+checkFresh();
 </script>
 </body>
 </html>
