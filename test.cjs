@@ -96,12 +96,19 @@ console.log(process.exitCode ? "\\n실패 있음" : "\\n전부 통과");
 `;
 eval(src + "\n" + checks);
 
-// 터치패드 버튼 → 입력 반영 점검 (setPointerCapture 예외에 죽지 않아야 한다)
+// 터치패드 점검: 좌표 추적형 입력(빗나감·미끄러짐 흡수) + 히트영역 확장 + 배치
 (function padCheck(){
   const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
-  const ok = /try\{\s*ev\.target\.setPointerCapture/.test(html);
-  console.log(ok ? "PASS: 터치패드 포인터캡처 예외 방어" : "FAIL: 터치패드 포인터캡처 예외 방어");
-  if(!ok) process.exitCode = 1;
+  const cases = [
+    ["좌표로 버튼 탐색(elementFromPoint)", /elementFromPoint/],
+    ["미끄러지면 키 전환(pointermove)", /pad\.addEventListener\("pointermove"/],
+    ["손가락별 추적", /fingers = new Map\(\)/],
+    ["히트영역 확장(투명 테두리 5px)", /border:5px solid transparent/],
+    ["하단 들어올림(safe-area + 14px)", /env\(safe-area-inset-bottom,0px\) \+ 14px/],
+    ["가로모드: 게임판 폭 예약(버튼과 분리)", /100vw - 280px/],
+    ["가로모드: 버튼 세로 중앙", /top:28px;bottom:0;align-items:center/],
+  ];
+  for(const [n,re] of cases){ const ok=re.test(html); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
 
 // 모바일 UX 점검: 탭 재시작 · 가로모드 레이아웃 · 버튼 클러스터
