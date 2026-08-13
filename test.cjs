@@ -95,3 +95,11 @@ A(before !== enemies[0].x+","+enemies[0].y, "적이 BFS로 추적 이동");
 console.log(process.exitCode ? "\\n실패 있음" : "\\n전부 통과");
 `;
 eval(src + "\n" + checks);
+
+// 터치패드 버튼 → 입력 반영 점검 (setPointerCapture 예외에 죽지 않아야 한다)
+(function padCheck(){
+  const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const ok = /try\{\s*ev\.target\.setPointerCapture/.test(html);
+  console.log(ok ? "PASS: 터치패드 포인터캡처 예외 방어" : "FAIL: 터치패드 포인터캡처 예외 방어");
+  if(!ok) process.exitCode = 1;
+})();

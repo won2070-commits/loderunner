@@ -426,7 +426,8 @@ addEventListener("keyup", ev=>{ const k=KM[ev.key]; if(k) keys[k]=false; });
 
 document.getElementById("pad").addEventListener("pointerdown", ev=>{
   const k = ev.target.dataset.k; if(!k) return;
-  ev.preventDefault(); ev.target.setPointerCapture(ev.pointerId);
+  ev.preventDefault();
+  try{ ev.target.setPointerCapture(ev.pointerId); }catch(_){}   // 캡처 실패해도 입력은 살려둔다
   if(k==="dl") dig(-1); else if(k==="dr") dig(1);
   else if(k==="l") press("left"); else if(k==="r") press("right");
   else if(k==="u") press("up"); else if(k==="d") press("down");
