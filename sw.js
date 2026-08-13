@@ -1,6 +1,6 @@
 // 오프라인 캐시 + 자기 치유.
 // 캐시 이름은 배포 때 index.html 의 APP_VER 와 같이 올린다.
-const C = "loderunner-v3";
+const C = "loderunner-v4";
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html"])).then(() => self.skipWaiting()));
@@ -14,7 +14,10 @@ self.addEventListener("activate", e => {
     await self.clients.claim();
     // 옛 페이지를 붙잡고 있던 창을 새 파일로 다시 불러온다.
     // (옛 index.html 에는 자동 갱신 코드가 없어서, 이걸 안 하면 스스로 못 풀려난다)
-    if(hadOld){
+    // 표식을 캐시에 남겨 이 버전에서는 딱 한 번만 — 재로드 루프를 원천 차단한다.
+    const box = await caches.open(C);
+    if(hadOld && !(await box.match("__healed"))){
+      await box.put("__healed", new Response("1"));
       const ws = await self.clients.matchAll({ type: "window" });
       for(const w of ws){ try{ await w.navigate(w.url); }catch(_){} }
     }
