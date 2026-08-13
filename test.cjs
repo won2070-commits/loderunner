@@ -162,3 +162,15 @@ eval(src + "\n" + checks);
   ];
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
+
+// 다이아몬드 D패드 배열 점검
+(function diamondCheck(){
+  const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const cases = [
+    ["▲ 1행 가운데", /\.u\{grid-column:2;grid-row:1\}/],
+    ["◀ 2행 왼쪽", /\.l\{grid-column:1;grid-row:2\}/],
+    ["▶ 2행 오른쪽", /\.r\{grid-column:3;grid-row:2\}/],
+    ["▼ 3행 가운데(다이아몬드 아래꼭짓점)", /\.d\{grid-column:2;grid-row:3\}/],
+  ];
+  for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
+})();
