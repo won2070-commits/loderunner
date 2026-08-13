@@ -1,13 +1,26 @@
-// 오프라인 캐시: 파일이 index.html 하나뿐이라 캐시도 하나면 충분하다.
-// 캐시 이름을 올리면 옛 캐시가 지워진다 — 배포 때 index.html 의 APP_VER 와 같이 올릴 것.
-const C = "loderunner-v2";
+// 오프라인 캐시 + 자기 치유.
+// 캐시 이름은 배포 때 index.html 의 APP_VER 와 같이 올린다.
+const C = "loderunner-v3";
+
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html"])).then(() => self.skipWaiting()));
 });
+
 self.addEventListener("activate", e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== C).map(k => caches.delete(k))))
-    .then(() => self.clients.claim()));
+  e.waitUntil((async () => {
+    const keys = await caches.keys();
+    const hadOld = keys.some(k => k !== C);              // 옛 캐시가 있었다 = 업데이트로 켜진 워커
+    await Promise.all(keys.filter(k => k !== C).map(k => caches.delete(k)));
+    await self.clients.claim();
+    // 옛 페이지를 붙잡고 있던 창을 새 파일로 다시 불러온다.
+    // (옛 index.html 에는 자동 갱신 코드가 없어서, 이걸 안 하면 스스로 못 풀려난다)
+    if(hadOld){
+      const ws = await self.clients.matchAll({ type: "window" });
+      for(const w of ws){ try{ await w.navigate(w.url); }catch(_){} }
+    }
+  })());
 });
+
 self.addEventListener("fetch", e => {
   if(e.request.method !== "GET") return;
   // HTML 은 브라우저 HTTP 캐시까지 건너뛰고 받아온다. 안 그러면 배포해도 최대 10분간 옛 파일이 나온다.
