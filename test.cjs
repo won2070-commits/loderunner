@@ -142,3 +142,16 @@ eval(src + "\n" + checks);
   console.log(cache ? "PASS: SW 캐시 버전 "+cache[1] : "FAIL: SW 캐시 이름");
   if(bad) process.exitCode = 1;
 })();
+
+// 모바일 선택(파란 블럭) 방지 점검
+(function selectionCheck(){
+  const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const cases = [
+    ["웹킷 선택 방지(사파리)", /-webkit-user-select:none/],
+    ["길게 눌러도 콜아웃 없음", /-webkit-touch-callout:none/],
+    ["selectstart 차단", /"contextmenu","selectstart","dragstart"/],
+    ["touchstart 기본동작 차단", /addEventListener\("touchstart", ev=>ev\.preventDefault\(\), \{passive:false\}\)/],
+    ["더블탭 확대 방지", /touch-action:manipulation/],
+  ];
+  for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
+})();

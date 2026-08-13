@@ -1,6 +1,6 @@
 // 오프라인 캐시 + 자기 치유.
 // 캐시 이름은 배포 때 index.html 의 APP_VER 와 같이 올린다.
-const C = "loderunner-v4";
+const C = "loderunner-v5";
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(["./", "./index.html"])).then(() => self.skipWaiting()));

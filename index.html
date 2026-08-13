@@ -9,9 +9,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="로드러너">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  /* 버튼을 누르거나 끌 때 글자·주변이 선택돼 파랗게 덮이는 것(모바일)을 막는다.
+     사파리·구형 크롬은 -webkit- 접두사가 없으면 무시한다 */
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;-moz-user-select:none;user-select:none;-webkit-touch-callout:none}
   body{background:#0a0c14;color:#cfd6e6;font-family:"Menlo",-apple-system,"Apple SD Gothic Neo",sans-serif;
-       display:flex;flex-direction:column;align-items:center;min-height:100dvh;padding:10px;gap:8px;overscroll-behavior:none}
+       display:flex;flex-direction:column;align-items:center;min-height:100dvh;padding:10px;gap:8px;
+       overscroll-behavior:none;touch-action:manipulation}
   h1{font-size:15px;letter-spacing:.35em;color:#7f8db0;font-weight:600}
   h1 b{color:#ffd23f}
   #hud{display:flex;gap:14px;font-size:13px;letter-spacing:.05em;flex-wrap:wrap;justify-content:center}
@@ -38,6 +42,7 @@
               height:54px;font-size:17px;font-family:inherit;user-select:none;touch-action:none;
               -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
   #pad button:active{background:#31406a;color:#ffd23f}
+  #pad button:focus{outline:none}          /* 눌린 뒤 테두리가 남지 않게 */
   #pad .dig{color:#ff8f5a;font-size:14px;font-weight:600}
   #pad .u{grid-column:2} #pad .l{grid-column:1} #pad .d{grid-column:2} #pad .r{grid-column:3}
 
@@ -97,7 +102,7 @@
 </p>
 
 <script>
-const APP_VER = "2026-08-13.7";      // 배포할 때마다 올린다 — 자동 새로고침의 기준값
+const APP_VER = "2026-08-13.8";      // 배포할 때마다 올린다 — 자동 새로고침의 기준값
 const W = 28, H = 16, TS = 24;
 const SPD = 0.115, FALL = 0.22, ESPD = 0.058, GRACE = 120; // 적은 느리게, 시작 2초 유예
 const REGEN = 280, TRAP = 150, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 2.5초 뒤 기어나옴
@@ -462,6 +467,11 @@ addEventListener("keydown", ev=>{
   if(ev.key===" "){ ev.preventDefault(); if(state==="over") newGame(); }
 });
 addEventListener("keyup", ev=>{ const k=KM[ev.key]; if(k) keys[k]=false; });
+
+// 길게 눌러도 선택·확대·컨텍스트 메뉴가 뜨지 않게
+["contextmenu","selectstart","dragstart"].forEach(t=>
+  document.getElementById("pad").addEventListener(t, ev=>ev.preventDefault()));
+document.getElementById("pad").addEventListener("touchstart", ev=>ev.preventDefault(), {passive:false});
 
 document.getElementById("pad").addEventListener("pointerdown", ev=>{
   const k = ev.target.dataset.k; if(!k) return;
