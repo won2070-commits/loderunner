@@ -38,18 +38,17 @@
        justify-content:space-between;align-items:flex-end;pointer-events:none;touch-action:none;
        padding:0 max(6px,env(safe-area-inset-left)) calc(env(safe-area-inset-bottom,0px) + 18px) max(6px,env(safe-area-inset-right))}
   #pad .cluster{display:grid;gap:0;pointer-events:auto}
-  #pad .nav{grid-template-columns:repeat(3,clamp(58px,19vw,76px))}
-  #pad .dg{grid-template-columns:repeat(2,clamp(68px,22vw,98px))}
+  #pad .side{grid-template-columns:repeat(3,clamp(48px,15vw,64px))}
   #pad button{background:rgba(21,27,44,.82);background-clip:padding-box;
               border:5px solid transparent;box-shadow:inset 0 0 0 1px #2c3757;
               color:#cfd6e6;border-radius:14px;height:66px;font-size:20px;font-family:inherit;
               user-select:none;touch-action:none}
   #pad button.on,#pad button:active{background:#31406a;background-clip:padding-box;color:#ffd23f}
   #pad button:focus{outline:none}          /* 눌린 뒤 테두리가 남지 않게 */
-  #pad .dig{color:#ff8f5a;font-size:14px;font-weight:600}
-  /* 삼각형 배열: ▲ 위 가운데 / ◀ ▼ ▶ 아랫줄에 모아서 — 엄지 이동이 가장 짧다 */
-  #pad .u{grid-column:2;grid-row:1} #pad .l{grid-column:1;grid-row:2}
-  #pad .d{grid-column:2;grid-row:2} #pad .r{grid-column:3;grid-row:2}
+  #pad .dig{color:#ff8f5a;font-size:13px;font-weight:600}
+  /* 양손 삼각형: ▲ 위 가운데 / 아랫줄 [방향키 · 파기 · 방향키] */
+  #pad .u{grid-column:2;grid-row:1}
+  #pad .p1{grid-column:1;grid-row:2} #pad .p2{grid-column:2;grid-row:2} #pad .p3{grid-column:3;grid-row:2}
 
   .rot{display:none}
   @media(pointer:coarse){
@@ -73,8 +72,7 @@
          padding:0 max(4px,env(safe-area-inset-right))
                  calc(env(safe-area-inset-bottom,0px) + 24px) max(4px,env(safe-area-inset-left))}
     #pad button{height:56px;background:rgba(21,27,44,.6);background-clip:padding-box}
-    #pad .nav{grid-template-columns:repeat(3,46px)}
-    #pad .dg{grid-template-columns:repeat(2,62px)}
+    #pad .side{grid-template-columns:repeat(3,46px)}
   }
 </style>
 </head>
@@ -92,15 +90,19 @@
   <div id="msg"><h2 id="mt"></h2><p id="mp"></p></div>
 </div>
 <div id="pad">
-  <div class="cluster nav">
+  <!-- 왼손 패드: ▲ / ◀ · ◤파기 · ▼ (▶ 없음) -->
+  <div class="cluster side">
     <button data-k="u" class="u">▲</button>
-    <button data-k="l" class="l">◀</button>
-    <button data-k="d" class="d">▼</button>
-    <button data-k="r" class="r">▶</button>
+    <button data-k="l" class="p1">◀</button>
+    <button data-k="dl" class="dig p2">◤파기</button>
+    <button data-k="d" class="p3">▼</button>
   </div>
-  <div class="cluster dg">
-    <button data-k="dl" class="dig">◤ 파기</button>
-    <button data-k="dr" class="dig">파기 ◥</button>
+  <!-- 오른손 패드: ▲ / ▼ · 파기◥ · ▶ (◀ 없음) -->
+  <div class="cluster side">
+    <button data-k="u" class="u">▲</button>
+    <button data-k="d" class="p1">▼</button>
+    <button data-k="dr" class="dig p2">파기◥</button>
+    <button data-k="r" class="p3">▶</button>
   </div>
 </div>
 <p class="help">
@@ -110,7 +112,7 @@
 </p>
 
 <script>
-const APP_VER = "2026-08-13.12";     // 배포할 때마다 올린다 — 자동 새로고침의 기준값
+const APP_VER = "2026-08-13.13";     // 배포할 때마다 올린다 — 자동 새로고침의 기준값
 const W = 28, H = 16, TS = 24;
 const SPD = 0.115, FALL = 0.22, ESPD = 0.058, GRACE = 120; // 적은 느리게, 시작 2초 유예
 const REGEN = 280, TRAP = 150, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 2.5초 뒤 기어나옴

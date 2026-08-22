@@ -121,8 +121,7 @@ eval(src + "\n" + checks);
     ["캔버스 탭 재시작", /cv\.addEventListener\("pointerdown", tapRestart\)/],
     ["가로모드: 화면 높이에 맞춤", /orientation:landscape\) and \(max-height:560px\)[\s\S]{0,400}height:calc\(100dvh/],
     ["가로모드: 제목·안내 숨김", /orientation:landscape\)[\s\S]{0,200}h1,\.help\{display:none\}/],
-    ["방향키 클러스터 좌측", /#pad \.nav\{grid-template-columns/],
-    ["파기 버튼 우측", /#pad \.dg\{grid-template-columns/],
+    ["양손 패드 그리드", /#pad \.side\{grid-template-columns/],
     ["세로모드 가로전환 안내", /가로로 눕히면/],
   ];
   for(const [n,re] of cases){
@@ -165,14 +164,24 @@ eval(src + "\n" + checks);
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
 
-// 삼각형 D패드 배열 점검 (▲ 위 / ◀ ▼ ▶ 한 줄)
-(function triangleCheck(){
+// 양손 패드 점검: 왼손 [◀·◤파기·▼], 오른손 [▼·파기◥·▶], 양쪽 다 ▲
+(function dualPadCheck(){
   const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
   const cases = [
     ["▲ 1행 가운데", /\.u\{grid-column:2;grid-row:1\}/],
-    ["◀ 2행 왼쪽", /\.l\{grid-column:1;grid-row:2\}/],
-    ["▼ 2행 가운데(삼각형 모임)", /\.d\{grid-column:2;grid-row:2\}/],
-    ["▶ 2행 오른쪽", /\.r\{grid-column:3;grid-row:2\}/],
+    ["아랫줄 3칸 배치", /\.p1\{grid-column:1;grid-row:2\}.*\.p2\{grid-column:2;grid-row:2\}.*\.p3\{grid-column:3;grid-row:2\}/],
+    ["왼손: ◀ 바깥", /data-k="l" class="p1"/],
+    ["왼손: 파기 가운데", /data-k="dl" class="dig p2"/],
+    ["왼손: ▼ 안쪽", /data-k="d" class="p3"/],
+    ["오른손: ▼ 안쪽", /data-k="d" class="p1"/],
+    ["오른손: 파기 가운데", /data-k="dr" class="dig p2"/],
+    ["오른손: ▶ 바깥", /data-k="r" class="p3"/],
   ];
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
+  const ups = (h.match(/data-k="u"/g)||[]).length;
+  console.log((ups===2?"PASS: ":"FAIL: ")+"▲ 양쪽 패드에 하나씩 ("+ups+")");
+  if(ups!==2) process.exitCode=1;
+  const lefts = (h.match(/data-k="l"/g)||[]).length, rights=(h.match(/data-k="r"/g)||[]).length;
+  console.log((lefts===1&&rights===1?"PASS: ":"FAIL: ")+"오른손엔 ◀ 없음·왼손엔 ▶ 없음");
+  if(lefts!==1||rights!==1) process.exitCode=1;
 })();
