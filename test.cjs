@@ -170,12 +170,12 @@ eval(src + "\n" + checks);
   const cases = [
     ["▲ 1행 가운데", /\.u\{grid-column:2;grid-row:1\}/],
     ["아랫줄 3칸 배치", /\.p1\{grid-column:1;grid-row:2\}.*\.p2\{grid-column:2;grid-row:2\}.*\.p3\{grid-column:3;grid-row:2\}/],
+    ["▼ 자리는 파기 바로 아래(3행)", /\.p4\{grid-column:2;grid-row:3\}/],
     ["왼손: ◀ 바깥", /data-k="l" class="p1"/],
     ["왼손: 파기 가운데", /data-k="dl" class="dig p2"/],
-    ["왼손: ▼ 안쪽", /data-k="d" class="p3"/],
-    ["오른손: ▼ 안쪽", /data-k="d" class="p1"/],
     ["오른손: 파기 가운데", /data-k="dr" class="dig p2"/],
     ["오른손: ▶ 바깥", /data-k="r" class="p3"/],
+    ["▼ 양쪽 다 파기 아래", /(data-k="d" class="p4"[\s\S]*){2}/],
   ];
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
   const ups = (h.match(/data-k="u"/g)||[]).length;
