@@ -113,9 +113,9 @@ eval(src + "\n" + checks);
     ["히트영역 확장(투명 테두리 5px)", /border:5px solid transparent/],
     ["빗나간 터치는 target 폴백으로 흡수", /padHit\(ev\.clientX, ev\.clientY\) \|\| targetHit\(ev\)/],
     ["하단 들어올림(safe-area + 18px)", /env\(safe-area-inset-bottom,0px\) \+ 18px/],
-    ["가로모드: 게임판 폭 예약(버튼과 분리)", /100vw - 280px/],
-    ["가로모드: 버튼 하단 배치(엄지 높이)", /top:28px;bottom:0;align-items:flex-end/],
-    ["가로모드: 하단 여유(safe-area + 24px)", /env\(safe-area-inset-bottom,0px\) \+ 24px/],
+    ["가로모드: 게임판 폭 예약(버튼과 분리)", /100vw - 268px/],
+    ["가로모드: 버튼 하단 배치(엄지 높이)", /top:22px;bottom:0;align-items:flex-end/],
+    ["가로모드: 하단 여유(safe-area + 22px)", /env\(safe-area-inset-bottom,0px\) \+ 22px/],
   ];
   for(const [n,re] of cases){ const ok=re.test(html); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
@@ -187,4 +187,18 @@ eval(src + "\n" + checks);
     console.log((n===2?"PASS: ":"FAIL: ")+label+" 양쪽 패드에 하나씩 ("+n+")");
     if(n!==2) process.exitCode=1;
   }
+})();
+
+// 난이도·크기 설정 점검
+(function tuningCheck(){
+  const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+  const num = re => parseFloat((h.match(re)||[])[1]);
+  const spd=num(/SPD = ([\d.]+)/), espd=num(/ESPD = ([\d.]+)/), grace=num(/GRACE = ([\d.]+)/);
+  const trap=num(/TRAP = ([\d.]+)/), regen=num(/REGEN = ([\d.]+)/);
+  const A=(c,m)=>{ console.log((c?"PASS: ":"FAIL: ")+m); if(!c) process.exitCode=1; };
+  A(spd<=0.10, "플레이어 속도 하향("+spd+")");
+  A(Math.abs(espd/spd-0.5)<0.03, "적/플레이어 속도비 0.5 유지("+(espd/spd).toFixed(2)+")");
+  A(grace>=150, "시작 유예 2.5초 이상("+grace+")");
+  A(trap>=180 && trap<regen, "적 갇힘 3초, 구멍 복구보단 짧게("+trap+"/"+regen+")");
+  A(/max-width:min\(1200px,calc\(\(100dvh - 220px\)\*1\.75\)\)/.test(h), "PC 게임판 화면 가득(상한 1200px)");
 })();

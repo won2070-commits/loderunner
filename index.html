@@ -22,7 +22,8 @@
   #hud span{color:#6b7899}
   #hud i{font-style:normal;color:#e9eefb}
   #hud .ver{color:#39445e;font-size:11px;align-self:center}
-  #wrap{position:relative;width:100%;max-width:760px}
+  /* 게임판은 창 높이가 허락하는 한 최대로 (PC에서 화면 가득) */
+  #wrap{position:relative;width:100%;max-width:min(1200px,calc((100dvh - 220px)*1.75))}
   canvas{width:100%;display:block;background:#0d1018;border:1px solid #1e2740;border-radius:6px}
   #msg{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
        background:rgba(6,8,14,.82);border-radius:6px;text-align:center;gap:10px;padding:16px}
@@ -65,15 +66,17 @@
   @media (orientation:landscape) and (max-height:560px){
     body{padding:0;gap:0;justify-content:flex-start}
     h1,.help{display:none}
-    #hud{padding:3px 0;font-size:12px;gap:12px}
-    #wrap{max-width:none;display:flex;justify-content:center;align-items:center;height:calc(100dvh - 28px)}
-    canvas{width:min(100vw - 280px, (100dvh - 40px)*1.75);height:auto;border:0;border-radius:4px}
+    #hud{padding:2px 0;font-size:11px;gap:10px}
+    #wrap{max-width:none;display:flex;justify-content:center;align-items:center;height:calc(100dvh - 22px)}
+    /* 패드 폭(좌우 각 134px)만 빼고 전부 게임판 — 버튼과 겹치지 않는 최대 크기 */
+    canvas{width:min(100vw - 268px, (100dvh - 30px)*1.75);height:auto;border:0;border-radius:4px}
     /* 다이아몬드를 세로 중앙이 아니라 아래쪽(엄지가 쉬는 높이)에 둔다 */
-    #pad{top:28px;bottom:0;align-items:flex-end;
+    #pad{top:22px;bottom:0;align-items:flex-end;
          padding:0 max(4px,env(safe-area-inset-right))
-                 calc(env(safe-area-inset-bottom,0px) + 24px) max(4px,env(safe-area-inset-left))}
-    #pad button{height:56px;background:rgba(21,27,44,.6);background-clip:padding-box}
-    #pad .side{grid-template-columns:repeat(3,46px)}
+                 calc(env(safe-area-inset-bottom,0px) + 22px) max(4px,env(safe-area-inset-left))}
+    #pad button{height:52px;background:rgba(21,27,44,.6);background-clip:padding-box}
+    #pad .side{grid-template-columns:repeat(3,42px)}
+    #pad .dig{font-size:12px}
   }
 </style>
 </head>
@@ -115,10 +118,12 @@
 </p>
 
 <script>
-const APP_VER = "2026-10-09.1";      // 배포할 때마다 올린다 — 자동 새로고침의 기준값
+const APP_VER = "2026-10-09.2";      // 배포할 때마다 올린다 — 자동 새로고침의 기준값
 const W = 28, H = 16, TS = 24;
-const SPD = 0.115, FALL = 0.22, ESPD = 0.058, GRACE = 120; // 적은 느리게, 시작 2초 유예
-const REGEN = 280, TRAP = 150, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 2.5초 뒤 기어나옴
+// 난이도: 전체 속도 ~15% 하향(플레이어/적 비율은 유지), 시작 유예 2.5초,
+// 적이 구멍에 더 오래 갇혀(3초) 파기 전술이 더 잘 통한다
+const SPD = 0.098, FALL = 0.19, ESPD = 0.049, GRACE = 150;
+const REGEN = 280, TRAP = 180, DIGLOCK = 14;   // 구멍 4.7초 유지 / 적은 3초 뒤 기어나옴
 
 const LEVELS = [
 [
