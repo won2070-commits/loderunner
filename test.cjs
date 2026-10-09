@@ -25,7 +25,14 @@ LEVELS.forEach((lv,i)=>{
   A((lv.join("").match(/&/g)||[]).length===1, \`레벨 \${i+1} 시작 위치\`);
 });
 
-die = () => {};                                  // 점검 중 사망 무시
+// 3번 죽으면 게임 끝 (목숨 3개)
+A(lives===3, "시작 목숨 3개");
+die(); A(lives===2 && state==="dead", "1번째 죽음 → 목숨 2, 부활 대기");
+state="play"; die(); A(lives===1, "2번째 죽음 → 목숨 1");
+state="play"; die(); A(lives===0 && state==="over", "3번째 죽음 → GAME OVER");
+newGame(); A(lives===3 && state==="play", "새 게임 → 목숨 3 복구");
+
+die = () => {};                                  // 이후 점검 중 사망 무시
 enemies.length = 0; grace = 0;
 
 // 이동 / 사다리 / 밧줄 / 낙하
@@ -164,24 +171,20 @@ eval(src + "\n" + checks);
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
 })();
 
-// 양손 패드 점검: 왼손 [◀·◤파기·▼], 오른손 [▼·파기◥·▶], 양쪽 다 ▲
-(function dualPadCheck(){
+// 양손 4방향 패드 점검: 양쪽 다 ▲◀▶▼ + 가운데 파기(왼손 ◤, 오른손 ◥)
+(function fourWayCheck(){
   const h = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
   const cases = [
     ["▲ 1행 가운데", /\.u\{grid-column:2;grid-row:1\}/],
-    ["아랫줄 3칸 배치", /\.p1\{grid-column:1;grid-row:2\}.*\.p2\{grid-column:2;grid-row:2\}.*\.p3\{grid-column:3;grid-row:2\}/],
+    ["가운뎃줄 3칸 배치", /\.p1\{grid-column:1;grid-row:2\}.*\.p2\{grid-column:2;grid-row:2\}.*\.p3\{grid-column:3;grid-row:2\}/],
     ["▼ 자리는 파기 바로 아래(3행)", /\.p4\{grid-column:2;grid-row:3\}/],
-    ["왼손: ◀ 바깥", /data-k="l" class="p1"/],
     ["왼손: 파기 가운데", /data-k="dl" class="dig p2"/],
     ["오른손: 파기 가운데", /data-k="dr" class="dig p2"/],
-    ["오른손: ▶ 바깥", /data-k="r" class="p3"/],
-    ["▼ 양쪽 다 파기 아래", /(data-k="d" class="p4"[\s\S]*){2}/],
   ];
   for(const [n,re] of cases){ const ok=re.test(h); console.log((ok?"PASS: ":"FAIL: ")+n); if(!ok) process.exitCode=1; }
-  const ups = (h.match(/data-k="u"/g)||[]).length;
-  console.log((ups===2?"PASS: ":"FAIL: ")+"▲ 양쪽 패드에 하나씩 ("+ups+")");
-  if(ups!==2) process.exitCode=1;
-  const lefts = (h.match(/data-k="l"/g)||[]).length, rights=(h.match(/data-k="r"/g)||[]).length;
-  console.log((lefts===1&&rights===1?"PASS: ":"FAIL: ")+"오른손엔 ◀ 없음·왼손엔 ▶ 없음");
-  if(lefts!==1||rights!==1) process.exitCode=1;
+  for(const [k,label] of [["u","▲"],["l","◀"],["r","▶"],["d","▼"]]){
+    const n = (h.match(new RegExp('data-k="'+k+'"',"g"))||[]).length;
+    console.log((n===2?"PASS: ":"FAIL: ")+label+" 양쪽 패드에 하나씩 ("+n+")");
+    if(n!==2) process.exitCode=1;
+  }
 })();
